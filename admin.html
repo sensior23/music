@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#11152c">
+  <title>IKSA Player - Admin</title>
+  <style>
+    :root { color-scheme: light; font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; color: #172033; background: #eef0fa; font-synthesis: none; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(ellipse at 15% 0%, #ded9ff 0, transparent 42%), radial-gradient(ellipse at 100% 80%, #fbd7ec 0, transparent 38%), #eef0fa; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .page { width: min(1160px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 64px; }
+    .topbar, .row, .section-heading, .user-card { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .topbar { margin-bottom: 24px; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand img { width: 48px; height: 48px; border-radius: 15px; object-fit: cover; box-shadow: 0 8px 22px #11152c20; }
+    .brand h1 { margin: 0; font-size: 20px; }
+    .brand p, .muted { margin: 4px 0 0; color: #657089; font-size: 13px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .button { border: 1px solid #ffffffa8; border-radius: 12px; padding: 10px 14px; background: #ffffff9c; color: #273149; font-weight: 700; font-size: 13px; text-decoration: none; }
+    .button:hover { background: #fff; }
+    .button.primary { color: white; background: #4f46e5; border-color: #4f46e5; }
+    .button.danger { color: #a32742; background: #fff0f2; border-color: #ffd3da; }
+    .button.small { padding: 7px 10px; font-size: 12px; }
+    .card { border: 1px solid #ffffffb8; border-radius: 24px; background: #ffffff91; box-shadow: 0 18px 48px #1b214414, inset 0 1px #fff; backdrop-filter: blur(16px); padding: 22px; margin-bottom: 18px; }
+    .auth-card { max-width: 460px; margin: 8vh auto; }
+    h2 { margin: 0; font-size: 18px; }
+    h3 { margin: 0; font-size: 14px; }
+    .warning { border: 1px solid #f5d792; border-radius: 14px; background: #fff8e5; padding: 12px 14px; color: #76521b; font-size: 12px; line-height: 1.55; }
+    .error { color: #b42342; margin: 12px 0 0; font-size: 13px; }
+    .success { color: #13764b; margin: 12px 0 0; font-size: 13px; }
+    .grid { display: grid; gap: 14px; }
+    .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .stat { padding: 16px; border: 1px solid #ffffffb8; border-radius: 18px; background: #ffffff83; }
+    .stat strong { display: block; font-size: 26px; }
+    .stat span { display: block; color: #657089; font-size: 12px; margin-top: 4px; }
+    .section-heading { margin-bottom: 16px; align-items: flex-start; }
+    .section-heading p { margin: 5px 0 0; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .field { display: grid; gap: 6px; }
+    .field.full { grid-column: 1 / -1; }
+    label { color: #48536d; font-size: 12px; font-weight: 700; }
+    input, select { width: 100%; min-width: 0; border: 1px solid #dce0ed; border-radius: 11px; padding: 10px 11px; background: #ffffffc7; color: #172033; outline: none; }
+    input:focus, select:focus { border-color: #8179ea; box-shadow: 0 0 0 3px #8179ea22; }
+    .inline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .inline input { flex: 1 1 180px; }
+    .track-list { display: grid; gap: 10px; }
+    .track-row { display: grid; grid-template-columns: minmax(130px, 1.1fr) minmax(110px, 1fr) minmax(95px, .7fr) minmax(170px, 1.4fr) auto; gap: 9px; align-items: center; padding: 10px; border: 1px solid #ffffffb8; border-radius: 14px; background: #ffffff84; }
+    .track-row input { padding: 8px 9px; font-size: 12px; }
+    .track-row .track-actions { display: flex; align-items: center; gap: 6px; }
+    .track-source { grid-column: 1 / -1; color: #657089; font-size: 11px; overflow-wrap: anywhere; }
+    .checkbox { display: flex; align-items: center; gap: 7px; color: #48536d; font-size: 12px; font-weight: 600; }
+    .checkbox input { width: auto; }
+    .pill { display: inline-flex; padding: 4px 8px; border-radius: 999px; background: #e8eaff; color: #4942a8; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+    .empty { padding: 18px; color: #657089; text-align: center; font-size: 13px; }
+    .hidden { display: none !important; }
+    #toast { position: fixed; z-index: 10; left: 50%; bottom: 22px; transform: translate(-50%, 18px); opacity: 0; pointer-events: none; border-radius: 12px; padding: 11px 16px; color: white; background: #172033; box-shadow: 0 12px 35px #0003; transition: opacity .2s, transform .2s; font-size: 13px; }
+    #toast.show { opacity: 1; transform: translate(-50%, 0); }
+    @media (max-width: 760px) { .stats { grid-template-columns: repeat(2, minmax(0,1fr)); } .track-row { grid-template-columns: repeat(2, minmax(0,1fr)); } .track-actions { grid-column: 1 / -1; } .track-source { grid-column: 1 / -1; } }
+    @media (max-width: 480px) { .page { width: min(100% - 20px, 1160px); padding-top: 18px; } .card { padding: 16px; border-radius: 20px; } .topbar { align-items: flex-start; } .form-grid { grid-template-columns: 1fr; } .field.full { grid-column: auto; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div class="brand">
+        <img src="./iksa-logo.png" alt="IKSA Player">
+        <div><h1>IKSA Admin</h1><p>Browser-local catalog and player controls</p></div>
+      </div>
+      <div id="topActions" class="actions hidden">
+        <a class="button" href="./music.html">Open player</a>
+        <button id="signOutButton" class="button" type="button">Sign out</button>
+      </div>
+    </header>
+
+    <section id="authPanel" class="card auth-card">
+      <h2 id="authHeading">Administrator sign in</h2>
+      <p id="authDescription" class="muted"></p>
+      <div class="warning" style="margin:16px 0">This browser-only login is not secure authorization. Anyone with access to this browser can inspect or change the stored data.</div>
+      <form id="authForm" class="grid" autocomplete="on">
+        <div class="field"><label for="authUsername">Admin username</label><input id="authUsername" name="username" required autocomplete="username" maxlength="64"></div>
+        <div class="field"><label for="authPassword">Password</label><input id="authPassword" name="password" type="password" required autocomplete="current-password" minlength="8"></div>
+        <div id="confirmField" class="field hidden"><label for="authConfirm">Confirm password</label><input id="authConfirm" name="confirm" type="password" autocomplete="new-password" minlength="8"></div>
+        <button id="authSubmit" class="button primary" type="submit">Sign in</button>
+      </form>
+      <p id="authMessage" class="error" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="dashboard" class="hidden">
+      <div class="card">
+        <div class="section-heading">
+          <div><h2>Overview</h2><p class="muted">Changes apply to this browser's IKSA Player data.</p></div>
+          <span class="pill">Local admin</span>
+        </div>
+        <div class="grid stats">
+          <div class="stat"><strong id="remoteCount">0</strong><span>Catalog tracks</span></div>
+          <div class="stat"><strong id="uploadCount">0</strong><span>Local uploads</span></div>
+          <div class="stat"><strong id="likedCount">0</strong><span>Liked tracks</span></div>
+          <div class="stat"><strong id="queueCount">0</strong><span>Queued tracks</span></div>
+        </div>
+      </div>
+
+      <section class="card">
+        <div class="section-heading">
+          <div><h2>Manage music catalog</h2><p class="muted">Edit track details, visibility and audio links, or remove tracks.</p></div>
+          <a class="button small" href="./upload.html">Upload an audio file</a>
+        </div>
+        <div id="trackList" class="track-list" aria-live="polite"></div>
+      </section>
+
+      <section class="card">
+        <div class="section-heading"><div><h2>Add a catalog track</h2><p class="muted">Add an audio URL. The source must allow direct browser playback.</p></div></div>
+        <form id="addTrackForm" class="form-grid">
+          <div class="field"><label for="newTitle">Title</label><input id="newTitle" required maxlength="255"></div>
+          <div class="field"><label for="newArtist">Artist</label><input id="newArtist" required maxlength="255"></div>
+          <div class="field"><label for="newGenre">Genre</label><input id="newGenre" required maxlength="100"></div>
+          <div class="field"><label for="newDuration">Duration (seconds, optional)</label><input id="newDuration" type="number" min="0" max="86400" value="0"></div>
+          <div class="field full"><label for="newAudioUrl">Audio URL</label><input id="newAudioUrl" type="url" required placeholder="https://example.com/track.mp3"></div>
+          <div class="field full"><label for="newCoverUrl">Cover image URL (optional)</label><input id="newCoverUrl" type="url" placeholder="https://example.com/cover.jpg"></div>
+          <div class="field full"><label class="checkbox"><input id="newLiked" type="checkbox"> Add to liked tracks</label></div>
+          <div class="field full"><button class="button primary" type="submit">Add track</button></div>
+        </form>
+      </section>
+
+      <section class="card">
+        <div class="section-heading"><div><h2>Player controls</h2><p class="muted">Set the default theme, audio preset and volume saved for this browser.</p></div></div>
+        <form id="settingsForm" class="form-grid">
+          <div class="field"><label for="defaultTheme">Player theme</label><select id="defaultTheme"><option value="light">Light</option><option value="dark">Dark</option></select></div>
+          <div class="field"><label for="defaultPreset">Audio preset</label><select id="defaultPreset"><option>Adaptive</option><option>Bass Boost</option><option>Vocal</option><option>Wide Spatial</option><option>Night Safe</option></select></div>
+          <div class="field full"><label for="defaultVolume">Default volume: <output id="volumeOutput">80%</output></label><input id="defaultVolume" type="range" min="0" max="100" value="80"></div>
+          <div class="field full"><button class="button primary" type="submit">Save player settings</button></div>
+        </form>
+      </section>
+
+      <section class="card">
+        <div class="section-heading"><div><h2>Local account profile</h2><p class="muted">Edit the profile stored in this browser. No other users are available in this local-only app.</p></div></div>
+        <form id="profileForm" class="form-grid">
+          <div class="field"><label for="profileName">Display name</label><input id="profileName" maxlength="120"></div>
+          <div class="field"><label for="profileEmail">Email</label><input id="profileEmail" type="email" maxlength="255"></div>
+          <div class="field"><label for="profileTier">Subscription tier</label><select id="profileTier"><option value="free">Free</option><option value="premium">Premium</option></select></div>
+          <div class="field" style="align-self:end"><button class="button primary" type="submit">Save profile</button></div>
+        </form>
+      </section>
+
+      <section class="card">
+        <div class="section-heading"><div><h2>Admin login</h2><p class="muted">Change the local administrator username or password.</p></div></div>
+        <form id="passwordForm" class="form-grid">
+          <div class="field"><label for="changeUsername">Admin username</label><input id="changeUsername" required maxlength="64"></div>
+          <div class="field"><label for="currentPassword">Current password</label><input id="currentPassword" type="password" required autocomplete="current-password"></div>
+          <div class="field"><label for="newPassword">New password</label><input id="newPassword" type="password" minlength="8" autocomplete="new-password" placeholder="Leave blank to keep current"></div>
+          <div class="field" style="align-self:end"><button class="button primary" type="submit">Update admin login</button></div>
+        </form>
+        <p id="passwordMessage" role="status" aria-live="polite"></p>
+      </section>
+    </section>
+  </main>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="./local-catalog.js"></script>
+  <script>
+    'use strict';
+    const ADMIN_KEY = 'iksa-browser-admin-v1';
+    const ADMIN_SESSION_KEY = 'iksa-browser-admin-session';
+    const PLAYER_KEY = 'sound-lounge-state-v1';
+    const USER_KEY = 'sound-lounge-user';
+    const THEME_KEY = 'iksa-player-theme';
+    const $ = selector => document.querySelector(selector);
+    const authPanel = $('#authPanel');
+    const dashboard = $('#dashboard');
+    const authForm = $('#authForm');
+    const authMessage = $('#authMessage');
+    const toast = $('#toast');
+    const PRESETS = {
+      Adaptive: { eq: [-2, 0, 2, 1, 3], bassBoost: 0, trebleEnhancement: 0, clarityEnhancement: 0, vocalEnhancement: 0, stereoWidening: 0, reverb: 0, aiOptimization: true },
+      'Bass Boost': { eq: [7, 4, 0, 1, 2], bassBoost: 8, trebleEnhancement: 1, compressor: 55, dynamicRangeControl: true },
+      Vocal: { eq: [-2, -1, 3, 6, 3], clarityEnhancement: 5, vocalEnhancement: 7, bassBoost: -2, aiOptimization: false },
+      'Wide Spatial': { eq: [2, 1, 0, 2, 4], stereoWidening: 85, spatialAudio: true, surroundSound: true, reverb: 18, threeDAudio: true },
+      'Night Safe': { eq: [-3, -1, 1, 1, 0], loudnessEnhancement: 10, compressor: 75, dynamicRangeControl: true, limiter: true, normalizer: true }
+    };
+    let localUploads = [];
+    let state = {};
+    let adminRecord = null;
+    let authMode = 'login';
+
+    function readPlayerState() {
+      try { return JSON.parse(localStorage.getItem(PLAYER_KEY) || 'null') || {}; }
+      catch (error) { throw new Error('Player data could not be read: ' + error.message); }
+    }
+
+    function writePlayerState() {
+      localStorage.setItem(PLAYER_KEY, JSON.stringify(state));
+    }
+
+    function setMessage(element, text, success = false) {
+      element.textContent = text;
+      element.className = text ? (success ? 'success' : 'error') : '';
+    }
+
+    function notify(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(notify.timer);
+      notify.timer = setTimeout(() => toast.classList.remove('show'), 2400);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+    }
+
+    function bytesToHex(bytes) {
+      return Array.from(new Uint8Array(bytes), byte => byte.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function hashPassword(password, salt) {
+      if (!window.crypto?.subtle || !window.crypto?.getRandomValues) {
+        throw new Error('Password hashing requires a modern browser with Web Crypto. Open this page in a current browser.');
+      }
+      const data = new TextEncoder().encode(`${salt}:${password}`);
+      return bytesToHex(await window.crypto.subtle.digest('SHA-256', data));
+    }
+
+    function newSalt() {
+      const bytes = new Uint8Array(16);
+      window.crypto.getRandomValues(bytes);
+      return bytesToHex(bytes);
+    }
+
+    function renderAuth() {
+      authMode = localStorage.getItem(ADMIN_KEY) ? 'login' : 'setup';
+      $('#authHeading').textContent = authMode === 'setup' ? 'Create administrator login' : 'Administrator sign in';
+      $('#authDescription').textContent = authMode === 'setup'
+        ? 'Set the username and password that unlock this browser’s admin tools.'
+        : 'Sign in to manage the music catalog and local player settings.';
+      $('#confirmField').classList.toggle('hidden', authMode !== 'setup');
+      $('#authSubmit').textContent = authMode === 'setup' ? 'Create admin login' : 'Sign in';
+      $('#authPassword').autocomplete = authMode === 'setup' ? 'new-password' : 'current-password';
+      authMessage.textContent = '';
+    }
+
+    function showDashboard() {
+      authPanel.classList.add('hidden');
+      dashboard.classList.remove('hidden');
+      $('#topActions').classList.remove('hidden');
+      loadDashboard().catch(error => notify(error.message));
+    }
+
+    async function verifyLogin(username, password) {
+      const stored = JSON.parse(localStorage.getItem(ADMIN_KEY) || 'null');
+      if (!stored || stored.username !== username.trim().toLowerCase()) return false;
+      const candidate = await hashPassword(password, stored.salt);
+      return candidate === stored.passwordHash;
+    }
+
+    authForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      authMessage.textContent = '';
+      const username = $('#authUsername').value.trim();
+      const password = $('#authPassword').value;
+      try {
+        if (authMode === 'setup') {
+          if (username.length < 3) throw new Error('Admin username must contain at least 3 characters.');
+          if (password.length < 8) throw new Error('Choose a password with at least 8 characters.');
+          if (password !== $('#authConfirm').value) throw new Error('The passwords do not match.');
+          const salt = newSalt();
+          adminRecord = { username: username.toLowerCase(), salt, passwordHash: await hashPassword(password, salt) };
+          localStorage.setItem(ADMIN_KEY, JSON.stringify(adminRecord));
+          sessionStorage.setItem(ADMIN_SESSION_KEY, 'active');
+          showDashboard();
+          return;
+        }
+        if (await verifyLogin(username, password)) {
+          sessionStorage.setItem(ADMIN_SESSION_KEY, 'active');
+          showDashboard();
+        } else {
+          throw new Error('Username or password is incorrect.');
+        }
+      } catch (error) {
+        setMessage(authMessage, error.message);
+      }
+    });
+
+    $('#signOutButton').addEventListener('click', () => {
+      sessionStorage.removeItem(ADMIN_SESSION_KEY);
+      location.reload();
+    });
+
+    function normalizeHttpUrl(value, label, optional = false) {
+      const input = value.trim();
+      if (!input && optional) return '';
+      let parsed;
+      try { parsed = new URL(input); }
+      catch (error) { throw new Error(`${label} must be a valid URL.`); }
+      if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error(`${label} must use HTTP or HTTPS.`);
+      return parsed.href;
+    }
+
+    async function loadDashboard() {
+      state = readPlayerState();
+      if (!Array.isArray(state.playlist)) {
+        state.playlist = window.IksaCatalog.defaultPlaylist.map(track => ({ ...track }));
+      }
+      localUploads = window.IksaCatalog ? await window.IksaCatalog.list() : [];
+      renderTracks();
+      renderStats();
+      renderSettings();
+      renderProfile();
+    }
+
+    function renderStats() {
+      $('#remoteCount').textContent = state.playlist.length;
+      $('#uploadCount').textContent = localUploads.length;
+      $('#likedCount').textContent = state.playlist.filter(track => track.liked).length + localUploads.filter(track => track.liked).length;
+      $('#queueCount').textContent = Array.isArray(state.queueIds) ? state.queueIds.length : state.playlist.length;
+    }
+
+    function renderTracks() {
+      const container = $('#trackList');
+      const tracks = [
+        ...state.playlist.map((track, index) => ({ ...track, _local: false, _key: String(track.id ?? index) })),
+        ...localUploads.map(track => ({ ...track, _local: true, _key: String(track.id) }))
+      ];
+      if (!tracks.length) {
+        container.innerHTML = '<p class="empty">No tracks in the catalog yet.</p>';
+        return;
+      }
+      container.innerHTML = tracks.map(track => `
+        <form class="track-row" data-track-form data-track-id="${escapeHtml(track._key)}" data-local="${track._local}">
+          <input name="title" aria-label="Track title" value="${escapeHtml(track.title)}" required maxlength="255">
+          <input name="artist" aria-label="Artist" value="${escapeHtml(track.artist)}" required maxlength="255">
+          <input name="genre" aria-label="Genre" value="${escapeHtml(track.genre)}" required maxlength="100">
+          ${track._local
+            ? `<label class="checkbox"><input name="isPublic" type="checkbox" ${track.is_public ? 'checked' : ''}> Visible in catalog</label>`
+            : `<input name="audioUrl" aria-label="Audio URL" type="url" value="${escapeHtml(track.audio_url)}" required>`}
+          <div class="track-actions"><button class="button small" type="submit">Save</button><button class="button danger small" type="button" data-delete>Delete</button></div>
+          <div class="track-source"><span class="pill">${track._local ? 'Local upload' : 'Audio URL'}</span> ${track._local ? `ID: ${escapeHtml(track._key)}` : escapeHtml(track.audio_url)}</div>
+        </form>`).join('');
+    }
+
+    $('#trackList').addEventListener('submit', async event => {
+      const form = event.target.closest('[data-track-form]');
+      if (!form) return;
+      event.preventDefault();
+      const formData = new FormData(form);
+      const id = form.dataset.trackId;
+      const local = form.dataset.local === 'true';
+      const title = String(formData.get('title') || '').trim();
+      const artist = String(formData.get('artist') || '').trim();
+      const genre = String(formData.get('genre') || '').trim();
+      try {
+        if (!title || !artist || !genre) throw new Error('Title, artist and genre are required.');
+        if (local) {
+          const saved = await window.IksaCatalog.get(id);
+          if (!saved) throw new Error('The local upload could not be found.');
+          await window.IksaCatalog.save({ ...saved, title, artist, genre, isPublic: formData.get('isPublic') === 'on' });
+        } else {
+          const track = state.playlist.find((item, index) => String(item.id ?? index) === id);
+          if (!track) throw new Error('The catalog track could not be found.');
+          track.title = title;
+          track.artist = artist;
+          track.genre = genre;
+          track.audio_url = normalizeHttpUrl(String(formData.get('audioUrl') || ''), 'Audio URL');
+          writePlayerState();
+        }
+        await loadDashboard();
+        notify('Track updated.');
+      } catch (error) { notify(error.message); }
+    });
+
+    $('#trackList').addEventListener('click', async event => {
+      const button = event.target.closest('[data-delete]');
+      if (!button) return;
+      const form = button.closest('[data-track-form]');
+      if (!window.confirm(`Delete "${form.elements.title.value}" from this browser's catalog?`)) return;
+      try {
+        if (form.dataset.local === 'true') {
+          await window.IksaCatalog.remove([form.dataset.trackId]);
+        } else {
+          state.playlist = state.playlist.filter((track, index) => String(track.id ?? index) !== form.dataset.trackId);
+          state.queueIds = (state.queueIds || []).filter(id => String(id) !== form.dataset.trackId);
+          if (Number.isInteger(state.currentTrackIndex)) state.currentTrackIndex = Math.min(state.currentTrackIndex, Math.max(0, state.playlist.length - 1));
+          writePlayerState();
+        }
+        await loadDashboard();
+        notify('Track deleted.');
+      } catch (error) { notify(error.message); }
+    });
+
+    $('#addTrackForm').addEventListener('submit', event => {
+      event.preventDefault();
+      try {
+        const audioUrl = normalizeHttpUrl($('#newAudioUrl').value, 'Audio URL');
+        const coverUrl = normalizeHttpUrl($('#newCoverUrl').value, 'Cover image URL', true);
+        const id = `admin-${window.crypto?.randomUUID?.() || Date.now().toString(36)}`;
+        state.playlist.push({
+          id,
+          title: $('#newTitle').value.trim(),
+          artist: $('#newArtist').value.trim(),
+          genre: $('#newGenre').value.trim(),
+          duration: Number($('#newDuration').value) || 0,
+          liked: $('#newLiked').checked,
+          cover: coverUrl || './iksa-logo.png',
+          audio_url: audioUrl
+        });
+        state.queueIds = [...(state.queueIds || []), id];
+        writePlayerState();
+        event.target.reset();
+        $('#newDuration').value = '0';
+        loadDashboard().catch(error => notify(error.message));
+        notify('Track added. Reload the music player to see it.');
+      } catch (error) { notify(error.message); }
+    });
+
+    function renderSettings() {
+      $('#defaultTheme').value = localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light';
+      $('#defaultPreset').value = state.audioSettings?.preset in PRESETS ? state.audioSettings.preset : 'Adaptive';
+      $('#defaultVolume').value = Math.max(0, Math.min(100, Number(state.volume ?? 80)));
+      $('#volumeOutput').value = `${$('#defaultVolume').value}%`;
+      $('#volumeOutput').textContent = `${$('#defaultVolume').value}%`;
+    }
+
+    $('#defaultVolume').addEventListener('input', event => { $('#volumeOutput').textContent = `${event.target.value}%`; });
+    $('#settingsForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const preset = $('#defaultPreset').value;
+      const existing = state.audioSettings || {};
+      state.audioSettings = { ...existing, ...PRESETS[preset], preset, eq: [...(PRESETS[preset].eq || existing.eq || PRESETS.Adaptive.eq)] };
+      state.volume = Number($('#defaultVolume').value);
+      state.isMuted = state.volume === 0;
+      localStorage.setItem(THEME_KEY, $('#defaultTheme').value);
+      writePlayerState();
+      notify('Player settings saved. Reload the music player to apply them.');
+    });
+
+    function renderProfile() {
+      let user = {};
+      try { user = JSON.parse(localStorage.getItem(USER_KEY) || '{}') || {}; }
+      catch (error) { user = {}; }
+      $('#profileName').value = user.display_name || '';
+      $('#profileEmail').value = user.email || '';
+      $('#profileTier').value = ['premium', 'pro'].includes(String(user.subscription_tier).toLowerCase()) ? 'premium' : 'free';
+    }
+
+    $('#profileForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const name = $('#profileName').value.trim();
+      const email = $('#profileEmail').value.trim();
+      if (!name || !email) { notify('Display name and email are required.'); return; }
+      let user = {};
+      try { user = JSON.parse(localStorage.getItem(USER_KEY) || '{}') || {}; }
+      catch (error) { user = {}; }
+      user.display_name = name;
+      user.email = email;
+      user.subscription_tier = $('#profileTier').value;
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+      notify('Local account profile updated.');
+    });
+
+    $('#passwordForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const message = $('#passwordMessage');
+      setMessage(message, '');
+      try {
+        const username = $('#changeUsername').value.trim();
+        const currentPassword = $('#currentPassword').value;
+        const newPassword = $('#newPassword').value;
+        if (username.length < 3) throw new Error('Admin username must contain at least 3 characters.');
+        if (!await verifyLogin(adminRecord?.username || '', currentPassword)) throw new Error('Current password is incorrect.');
+        if (newPassword && newPassword.length < 8) throw new Error('New password must contain at least 8 characters.');
+        const salt = newPassword ? newSalt() : adminRecord.salt;
+        const passwordHash = newPassword ? await hashPassword(newPassword, salt) : adminRecord.passwordHash;
+        adminRecord = { username: username.toLowerCase(), salt, passwordHash };
+        localStorage.setItem(ADMIN_KEY, JSON.stringify(adminRecord));
+        event.target.reset();
+        $('#changeUsername').value = adminRecord.username;
+        setMessage(message, 'Admin login updated.', true);
+      } catch (error) { setMessage(message, error.message); }
+    });
+
+    (async function initialize() {
+      try {
+        adminRecord = JSON.parse(localStorage.getItem(ADMIN_KEY) || 'null');
+        if (sessionStorage.getItem(ADMIN_SESSION_KEY) === 'active' && adminRecord) {
+          $('#changeUsername').value = adminRecord.username;
+          showDashboard();
+        } else {
+          sessionStorage.removeItem(ADMIN_SESSION_KEY);
+          renderAuth();
+        }
+      } catch (error) {
+        setMessage(authMessage, error.message);
+      }
+    })();
+  </script>
+</body>
+</html>
